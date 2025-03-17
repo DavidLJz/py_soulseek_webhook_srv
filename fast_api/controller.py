@@ -17,7 +17,7 @@ from app.infra.slsk import (
 
 from app.infra.websockets import ConnectionManager
 
-from .models import WebsocketMessage, WebsocketClientMessage
+from .models import WebsocketClientMessage, WebsocketServerMessage
 from .track_search_manager import TrackSearchSessionManager
 
 public_router = APIRouter()
@@ -53,6 +53,12 @@ async def lifespan(app: FastAPI):
 		await slsk.login()
 
 	register_session_destroyed_event(slsk, reconnect_session)
+
+	async def on_new_connection(_, ws: WebSocket):
+		msg = WebsocketServerMessage.from_ws_server_message_enum().model_dump_json()
+		await ws.send_text(msg)
+
+	manager.register_connection_event_listener(on_new_connection)
 
 	yield
 
