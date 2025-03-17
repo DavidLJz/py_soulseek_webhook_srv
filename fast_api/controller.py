@@ -54,6 +54,7 @@ async def lifespan(app: FastAPI):
 	# register_session_destroyed_event(slsk, lambda e: asyncio.create_task(app.state.lifespan.shutdown()))
 
 	async def reconnect_session(e: SessionDestroyedEvent):
+		await slsk.start()
 		await slsk.login()
 
 	register_session_destroyed_event(slsk, reconnect_session)
