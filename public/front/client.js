@@ -150,24 +150,18 @@ class SearchResponse {
 class TrackDownloadInfo {
   /**
   * 
-  * @param {int} ticket 
-  * @param {string} username 
-  * @param {string} filename 
-  * @param {string} status 
+  * @param {status} status
+  * @param {TrackInfo} trackInfo
   */
-  constructor(ticket, username, filename, status) {
-    this.ticket = ticket;
-    this.username = username;
-    this.filename = filename;
+  constructor(status, trackInfo) {
     this.status = status;
+    this.trackInfo = trackInfo;
   }
 
   static fromJson(d) {
     return new TrackDownloadInfo(
-      d.ticket,
-      d.username,
-      d.filename,
-      d.status
+      d.status,
+      TrackInfo.fromJson(d.trackInfo)
     );
   }
 }
@@ -244,14 +238,13 @@ class SlskWebSocketClient {
   
   /**
   * 
-  * @param {int} ticket 
-  * @param {string} username 
-  * @param {string} filename 
+  * @param {string} track_id
+  * @param {string} result_id
   */
-  sendTrackDownloadRequest(ticket, username, filename) {
+  sendTrackDownloadRequest(track_id, result_id) {
     const message = {
       msg_type: SlskWebSocketClient.ClientMessageTypes.TRACK_DOWNLOAD_REQUEST,
-      data: { ticket, username, filename }
+      data: { track_id, result_id }
     };
     this.websocketClient.sendMessage(message);
   }
