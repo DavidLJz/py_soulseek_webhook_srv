@@ -4,7 +4,6 @@ from typing import Any
 from pydantic import BaseModel
 
 from aioslsk.search.model import FileData, SearchResult
-from aioslsk.transfer.model import TransferState
 
 # region TrackInfo
 
@@ -201,10 +200,10 @@ class WebsocketServerMessage(BaseModel):
     )
 
   @staticmethod
-  def from_track_info(track_info: 'TrackInfo') -> 'WebsocketServerMessage':
+  def from_track_info_list(track_info_list: list[TrackInfo]) -> 'WebsocketServerMessage':
     return WebsocketServerMessage(
       msg_type= WebsocketServerMessageType.TRACK_INFO,
-      data= track_info.model_dump()
+      data= track_info_list
     )
 
   @staticmethod
