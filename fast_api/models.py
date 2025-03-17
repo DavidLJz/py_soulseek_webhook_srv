@@ -1,6 +1,6 @@
 from enum import Enum
 from json import loads
-from typing import Any
+from typing import Any, Iterable
 from pydantic import BaseModel
 
 from aioslsk.search.model import FileData, SearchResult
@@ -154,6 +154,8 @@ class WebsocketClientMessage(BaseModel):
 
 # region Server
 class WebsocketServerMessageType(Enum):
+  SERVER_MESSAGE_TYPES = 0
+
   TRACK_INFO = 1
   
   # You searched: "{query}", ticket: {ticket}
@@ -166,6 +168,8 @@ class WebsocketServerMessageType(Enum):
 class SearchResponse(BaseModel):
   query: str
   ticket: int
+  total_results: int = 0
+  current_results: int = 0
   resultset: set[TrackInfo]|None = None
 
 
@@ -187,15 +191,27 @@ class WebsocketServerMessage(BaseModel):
   data: Any
 
   @staticmethod
-  def from_search_response(query: str, 
-                                   ticket: int,
-                                   resultset: set[TrackInfo]|None = None) -> 'WebsocketServerMessage':
+  def from_ws_server_message_enum() -> 'WebsocketServerMessage':
+    return WebsocketServerMessage (
+      msg_type= WebsocketServerMessageType.SERVER_MESSAGE_TYPES,
+      data= { i.name: i.value for i in WebsocketServerMessageType }
+      )
+
+  @staticmethod
+  def from_search_response( query: str, 
+                            ticket: int,
+                            total_results: int,
+                            resultset: Iterable[TrackInfo]|None = None) -> 'WebsocketServerMessage':
+    current_results = len(resultset) if resultset else 0
+
     return WebsocketServerMessage(
       msg_type= WebsocketServerMessageType.SEARCH_RESPONSE,
       data= SearchResponse(
           query= query,
           ticket= ticket,
-          resultset= resultset
+          resultset= resultset,
+          total_results= total_results,
+          current_results= current_results
         )
     )
 
