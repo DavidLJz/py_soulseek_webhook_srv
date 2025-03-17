@@ -64,7 +64,7 @@ class TrackSearchSessionManager:
 
         s = self._tracksets.setdefault(search_index, set())
 
-        await self.broadcast_search_response(query, search_request.ticket, s)
+        await self.broadcast_search_response(query, search_request.ticket, s, client_id= client_id)
 
     async def on_search_result_event(self, e: SearchResultEvent):
         search_index = SearchIndex(query=e.query.query, ticket=e.query.ticket)
