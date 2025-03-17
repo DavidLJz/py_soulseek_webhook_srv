@@ -17,7 +17,11 @@ from app.infra.slsk import (
 
 from app.infra.websockets import ConnectionManager
 
-from .models import WebsocketClientMessage, WebsocketServerMessage
+from .models import (
+	WebsocketClientMessage, WebsocketServerMessage,
+	WebsocketClientMessageType, WebsocketServerMessageType
+	)
+
 from .track_search_manager import TrackSearchSessionManager
 
 public_router = APIRouter()
@@ -68,18 +72,10 @@ async def lifespan(app: FastAPI):
 	)
 
 
-async def handle_search_request(websocket: WebSocket, query: str):
-	query, ticket, trackset = await track_search_manager.register_search_request(query)
-
-	s = f'You searched: "{query}", ticket: {ticket}'
-
-	await manager.send_personal_message(s, websocket)
-
-	if len(trackset) > 0:
-		for t in trackset:
-			await manager.send_personal_message(t.model_dump_json(), websocket)
-	else:
-		await manager.send_personal_message('Waiting for search results...', websocket)
+@public_router.get("/")
+async def get():
+	with open("../../../public/front/index.html") as f:
+		return HTMLResponse(content=f.read(), status_code=200)
 
 
 async def handle_track_download_request(websocket: WebSocket, ticket: int, username: str, filename: str):
@@ -111,69 +107,8 @@ async def handle_track_download_request(websocket: WebSocket, ticket: int, usern
 	# await manager.send_personal_message(f"Download of {filename} from {username} finished!", websocket)
 
 
-
-html = """
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Chat</title>
-	</head>
-	<body>
-		<h1>WebSocket Chat</h1>
-		<h2>Your ID: <span id="ws-id"></span></h2>
-		<form action="" onsubmit="sendMessage(event)">
-			<input type="text" id="messageText" autocomplete="off"/>
-			<button>Send</button>
-		</form>
-		<div id='messages'>
-		</div>
-		<script>
-			var client_id = Date.now()
-			document.querySelector("#ws-id").textContent = client_id;
-			var ws = new WebSocket(`ws://localhost:8000/ws/${client_id}/search`);
-			ws.onmessage = function(event) {
-				var messages = document.getElementById('messages')
-				var message = document.createElement('div')
-				var content = JSON.parse(event.data)
-				message.innerHTML = `
-					<div style="border: 1px solid black; margin: 10px; padding: 10px;">
-						<div>Username: ${content.username}</div>
-						<div>Filename: ${content.filename}</div>
-						<div>Bitrate: ${content.bitrate}</div>
-						<div>Sample Rate: ${content.sample_rate}</div>
-						<div>Bit Depth: ${content.bit_depth}</div>
-						<div>Duration: ${content.duration}</div>
-						<button onclick="downloadFile()">Download</button>
-					</div>
-				`
-				messages.appendChild(message)
-			};
-			function sendMessage(event) {
-				var input = document.getElementById("messageText")
-				
-				const searchRequest = {
-					query: input.value
-				}
-				
-				ws.send( 
-				input.value = ''
-				event.preventDefault()
-			}
-			function downloadFile() {
-				alert('Download button clicked!')
-			}
-		</script>
-	</body>
-</html>
-"""
-
-@public_router.get("/")
-async def get():
-	return HTMLResponse(html)
-
-
-@public_router.websocket("/ws/{client_id}/search")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
+@public_router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
 	try:
 		await manager.connect(websocket)
 
@@ -182,19 +117,22 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
 			msg = None
 
 			try:
-				msg = WebsocketMessage.from_json(jsons)
+				msg = WebsocketClientMessage.from_json(jsons)
 
 			except Exception as e:
-				await manager.send_personal_message(f"Error parsing message: {e}", websocket)
+				msg = WebsocketServerMessage.from_bad_request(f"Error parsing message: {e}")
 
-				continue
+				await manager.send_personal_message(msg.model_dump_json(), websocket)
 
-			if msg.msg_type == WebsocketClientMessage.SEARCH_REQUEST:
-				await handle_search_request(websocket, msg.struct_data.query)
-			
+				break
+
+			if msg.msg_type == WebsocketClientMessageType.SEARCH_REQUEST:
+				query = msg.struct_data.query
+
+				await track_search_manager.register_search_request(client_id, query)
+
 			elif msg.msg_type == WebsocketClientMessage.TRACK_DOWNLOAD_REQUEST:
 				pass
 
 	except WebSocketDisconnect:
-		await manager.disconnect(websocket)
-		await manager.broadcast(f"Client #{client_id} left the chat")
+		await manager.disconnect(client_id)
