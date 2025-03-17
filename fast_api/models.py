@@ -200,6 +200,25 @@ class TrackDownloadInfo(BaseModel):
 
 
 class WebsocketServerMessage(BaseModel):
+  """
+  WebsocketServerMessage is a model representing messages sent from the server over a WebSocket connection.
+  Attributes:
+    msg_type (WebsocketServerMessageType): The type of the message.
+    data (Any): The data associated with the message.
+  Methods:
+    from_internal_error(msg: str) -> 'WebsocketServerMessage':
+      Creates a WebsocketServerMessage representing an internal error.
+    from_bad_request(msg: str) -> 'WebsocketServerMessage':
+      Creates a WebsocketServerMessage representing a bad request error.
+    from_ws_server_message_enum() -> 'WebsocketServerMessage':
+      Creates a WebsocketServerMessage containing all server message types.
+    from_search_response(query: str, ticket: int, total_results: int, resultset: Iterable[TrackInfo]|None = None) -> 'WebsocketServerMessage':
+      Creates a WebsocketServerMessage containing a search response.
+    from_track_info_list(track_info_list: list[TrackInfo]) -> 'WebsocketServerMessage':
+      Creates a WebsocketServerMessage containing a list of track information.
+    from_track_download_response(ticket: int, username: str, filename: str, status: TrackDownloadStatus) -> 'WebsocketServerMessage':
+      Creates a WebsocketServerMessage containing a track download response.
+  """
   msg_type: WebsocketServerMessageType
   data: Any
 
