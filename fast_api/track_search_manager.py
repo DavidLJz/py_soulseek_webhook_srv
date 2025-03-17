@@ -64,7 +64,7 @@ class TrackSearchSessionManager:
 
         s = self._tracksets.setdefault(search_index, set())
 
-        await self.broadcast_search_response(query, search_request.ticket, s, client_id= client_id)
+        await self.broadcast_search_response(search_index, s, client_id= client_id)
 
     async def on_search_result_event(self, e: SearchResultEvent):
         search_index = SearchIndex(query=e.query.query, ticket=e.query.ticket)
@@ -85,18 +85,19 @@ class TrackSearchSessionManager:
         if not newtracks:
             return
 
-        await self.broadcast_search_response(e.query.query, e.query.ticket, newtracks)
+        await self.broadcast_search_response(search_index, newtracks)
 
     async def broadcast_search_response(self, 
-                                        query:str, 
-                                        ticket:int, 
+                                        search_index: SearchIndex,
                                         tracklist: list[TrackInfo],
                                         client_id: str = ""
                                         ):
+        total_results = len(self._trackset_by_search(search_index))
+
         msg = WebsocketServerMessage.from_search_response(
-            query=  query,
-            ticket= ticket,
-            total_results=  len(tracklist),
+            query=  search_index.query,
+            ticket= search_index.ticket,
+            total_results=  total_results,
             resultset=  tracklist
             )
         
