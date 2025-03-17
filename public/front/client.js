@@ -285,7 +285,7 @@ class SlskWebSocketClient {
   }
   
   on (event, handler) {
-    if (!Array.from(Object.values(this.eventHandlers)).includes(event)) {
+    if (!Array.from(Object.keys(this.eventHandlers)).includes(event)) {
       throw new Error(`Unknown event: ${event}`);
     }
 
