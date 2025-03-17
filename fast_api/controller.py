@@ -73,9 +73,15 @@ async def lifespan(app: FastAPI):
 
 
 @public_router.get("/")
-async def get():
-	with open("../../../public/front/index.html") as f:
+async def endpoint_index():
+	with open(r".\public\front\index.html") as f:
 		return HTMLResponse(content=f.read(), status_code=200)
+	
+
+@public_router.get("/client.js")
+async def endpoint_client_js():
+	with open(r".\public\front\client.js") as f:
+		return HTMLResponse(content=f.read(), status_code=200, media_type="application/javascript")
 
 
 async def handle_track_download_request(websocket: WebSocket, ticket: int, username: str, filename: str):
