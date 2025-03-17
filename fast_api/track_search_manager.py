@@ -18,6 +18,22 @@ SearchIndex = namedtuple('SearchIndex', ['query', 'ticket'])
 
 
 class TrackSearchSessionManager:
+    """
+    Manages track search sessions, handling search requests and broadcasting search results.
+    Attributes:
+        manager (ConnectionManager): The connection manager for handling websocket connections.
+        slsk (SoulSeekClient): The SoulSeek client for performing search requests.
+    Methods:
+        __init__(manager: ConnectionManager, slsk: SoulSeekClient):
+            Initializes the TrackSearchSessionManager with a connection manager and a SoulSeek client.
+        async register_search_request(query: str) -> tuple[str, int, set[TrackInfo]]:
+            Registers a search request, performs the search, and broadcasts the search response.
+        async on_search_result_event(e: SearchResultEvent):
+            Handles search result events, updates the track sets, and broadcasts new search results.
+        async broadcast_search_response(query: str, ticket: int, tracklist: list[TrackInfo]):
+            Broadcasts the search response to all connected clients.
+    """
+
     _tracksets: dict[SearchIndex, set[TrackInfo]] = {}
     # Variable that stores a map of track sets indexed by SearchIndex
 
@@ -34,12 +50,12 @@ class TrackSearchSessionManager:
     def _remove_trackset(self, search_index: SearchIndex):
         self._tracksets.pop(search_index, None)
 
-    async def register_search_request(self, query: str) -> tuple[str, int, set[TrackInfo]]:
+    async def register_search_request(self, client_id:str, query: str) -> tuple[str, int, set[TrackInfo]]:
         for search_index, tracklist in self._tracksets.items():
             if search_index.query != query:
                 continue
 
-            await self.broadcast_search_response(query, search_index.ticket, tracklist)
+            await self.broadcast_search_response(query, search_index.ticket, tracklist, client_id= client_id)
             return
 
         search_request = await slsk_search_request(self.slsk, query)
@@ -71,12 +87,22 @@ class TrackSearchSessionManager:
 
         await self.broadcast_search_response(e.query.query, e.query.ticket, newtracks)
 
-    async def broadcast_search_response(self, query:str, ticket:int, tracklist: list[TrackInfo]):
+    async def broadcast_search_response(self, 
+                                        query:str, 
+                                        ticket:int, 
+                                        tracklist: list[TrackInfo],
+                                        client_id: str = ""
+                                        ):
         msg = WebsocketServerMessage.from_search_response(
             query=  query,
             ticket= ticket,
             total_results=  len(tracklist),
             resultset=  tracklist
             )
+        
+        s = msg.model_dump_json()
 
-        await self.manager.broadcast(msg.model_dump_json())
+        if client_id:
+            await self.manager.send_personal_message(s, client_id= client_id)
+        else:
+            await self.manager.broadcast(s)
