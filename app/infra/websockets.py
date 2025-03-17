@@ -38,15 +38,18 @@ class ConnectionManager:
 
         self._emit_events('connection', client_id, websocket)
 
-    async def disconnect(self, client_id:str, websocket: WebSocket):
-        self.active_connections.pop(client_id)
-        await websocket.close()
+    async def disconnect(self, client_id:str):
+        websocket = self.active_connections.pop(client_id, None)
+        if websocket:
+            await websocket.close()
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+    async def send_personal_message(self, message: str, client_id: str):
+        websocket = self.active_connections.get(client_id)
+        if websocket:
+            await websocket.send_text(message)
 
     async def broadcast(self, message: str):
-        for connection in self.active_connections:
+        for connection in self.active_connections.values():
             await connection.send_text(message)
 
     async def disconnect_all(self):
