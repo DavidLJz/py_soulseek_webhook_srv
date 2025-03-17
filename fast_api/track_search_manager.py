@@ -8,7 +8,11 @@ from app.infra.slsk import (
 
 from app.infra.websockets import ConnectionManager
 
-from .models import tracks_info_from_aiosk_search_results, TrackInfo
+from .models import (
+    tracks_info_from_aiosk_search_results, 
+    TrackInfo,
+    WebsocketServerMessage
+    )
 
 SearchIndex = namedtuple('SearchIndex', ['query', 'ticket'])
 
@@ -31,9 +35,12 @@ class TrackSearchSessionManager:
         self._tracksets.pop(search_index, None)
 
     async def register_search_request(self, query: str) -> tuple[str, int, set[TrackInfo]]:
-        for search_index in self._tracksets.keys():
-            if search_index.query == query:
-                return search_index.query, search_index.ticket, self._trackset_by_search(search_index)
+        for search_index, tracklist in self._tracksets.items():
+            if search_index.query != query:
+                continue
+
+            await self.broadcast_search_response(query, search_index.ticket, tracklist)
+            return
 
         search_request = await slsk_search_request(self.slsk, query)
 
@@ -41,12 +48,14 @@ class TrackSearchSessionManager:
 
         s = self._tracksets.setdefault(search_index, set())
 
-        return search_request.query, search_request.ticket, s
+        await self.broadcast_search_response(query, search_request.ticket, s)
 
     async def on_search_result_event(self, e: SearchResultEvent):
         search_index = SearchIndex(query=e.query.query, ticket=e.query.ticket)
 
         self._tracksets.setdefault(search_index, set())
+
+        newtracks = []
 
         for r in e.query.results:
             for tt in tracks_info_from_aiosk_search_results(r):
@@ -55,8 +64,19 @@ class TrackSearchSessionManager:
 
                 self._trackset_by_search(search_index).add(tt)
 
-                await self.manager.broadcast(tt.model_dump_json())
+                newtracks.append(tt)
 
-        n = len(self._trackset_by_search(search_index))
+        if not newtracks:
+            return
 
-        await self.manager.broadcast(f"Tracks reported so far: {n}")
+        await self.broadcast_search_response(e.query.query, e.query.ticket, newtracks)
+
+    async def broadcast_search_response(self, query:str, ticket:int, tracklist: list[TrackInfo]):
+        msg = WebsocketServerMessage.from_search_response(
+            query=  query,
+            ticket= ticket,
+            total_results=  len(tracklist),
+            resultset=  tracklist
+            )
+
+        await self.manager.broadcast(msg.model_dump_json())
