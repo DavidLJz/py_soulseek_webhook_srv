@@ -36,7 +36,7 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections[client_id] = websocket
 
-        self._emit_events('connection', client_id, websocket)
+        await self._emit_events('connection', client_id, websocket)
 
     async def disconnect(self, client_id:str):
         websocket = self.active_connections.pop(client_id, None)
