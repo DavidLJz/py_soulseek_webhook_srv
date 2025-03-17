@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soulseekin</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <script src="client.js"></script>
 </head>
 <body>
     <div class="container">
@@ -16,11 +15,21 @@
         </div>
         <button id="searchButton" class="btn btn-primary">Search</button>
         <div id="results" class="mt-5"></div>
+        <div id="clientIdDisplay" class="mt-3"></div> <!-- New element to display clientId -->
     </div>
 
+    <script src="./client.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const client = new SlskWebSocketClient('ws://your-websocket-url');
+            const clientId = Math.random().toString(36).substring(7);
+
+            // Display the clientId
+            document.getElementById('clientIdDisplay').innerText = `Client ID: ${clientId}`;
+
+            const client = new SlskWebSocketClient('ws://localhost:8000/' + clientId);
+
             client.connect();
 
             document.getElementById('searchButton').addEventListener('click', () => {
