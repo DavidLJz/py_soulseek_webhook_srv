@@ -2,3 +2,4 @@ fastapi
 uvicorn
 aioslsk
 python-decouple
+nanoid

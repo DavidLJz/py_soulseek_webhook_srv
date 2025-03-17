@@ -2,6 +2,7 @@ from enum import Enum
 from json import loads
 from typing import Any, Iterable
 from pydantic import BaseModel
+from nanoid import generate
 
 from aioslsk.search.model import FileData, SearchResult
 
@@ -167,7 +168,12 @@ class WebsocketServerMessageType(Enum):
   ERROR = 4
 
 
+def _generate_search_response_id() -> str:
+  return generate(size=8)
+
+
 class SearchResponse(BaseModel):
+  Id: str
   query: str
   ticket: int
   total_results: int = 0
@@ -194,10 +200,8 @@ class WsError(BaseModel):
 
 
 class TrackDownloadInfo(BaseModel):
-  ticket: int
-  username: str
-  filename: str
   status: TrackDownloadStatus = TrackDownloadStatus.PENDING
+  track: TrackInfo
 
 
 class WebsocketServerMessage(BaseModel):
@@ -266,6 +270,7 @@ class WebsocketServerMessage(BaseModel):
     return WebsocketServerMessage(
       msg_type= WebsocketServerMessageType.SEARCH_RESPONSE,
       data= SearchResponse(
+          Id= _generate_search_response_id(),
           query= query,
           ticket= ticket,
           resultset= resultset,
@@ -282,16 +287,12 @@ class WebsocketServerMessage(BaseModel):
     )
 
   @staticmethod
-  def from_track_download_response( ticket: int, 
-                                    username: str, 
-                                    filename: str,
+  def from_track_download_response( track_info: TrackInfo,
                                     status: TrackDownloadStatus) -> 'WebsocketServerMessage':
     return WebsocketServerMessage(
       msg_type= WebsocketServerMessageType.TRACK_DOWNLOAD_RESPONSE,
       data= TrackDownloadInfo(
-          ticket= ticket,
-          username= username,
-          filename= filename,
-          status= status
+          status= status,
+          track= track_info
         )
     )
