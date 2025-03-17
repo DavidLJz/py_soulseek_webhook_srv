@@ -113,7 +113,7 @@ async def handle_track_download_request(websocket: WebSocket, ticket: int, usern
 	# await manager.send_personal_message(f"Download of {filename} from {username} finished!", websocket)
 
 
-@public_router.websocket("/ws/{client_id}")
+@public_router.websocket("/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
 	try:
 		await manager.connect(websocket)
