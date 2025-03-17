@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soulseekin</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="client.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Soulseekin</h1>
+        <div class="form-group">
+            <label for="searchQuery">Search Query</label>
+            <input type="text" class="form-control" id="searchQuery" placeholder="Enter search query">
+        </div>
+        <button id="searchButton" class="btn btn-primary">Search</button>
+        <div id="results" class="mt-5"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const client = new SlskWebSocketClient('ws://your-websocket-url');
+            client.connect();
+
+            document.getElementById('searchButton').addEventListener('click', () => {
+                const query = document.getElementById('searchQuery').value;
+                client.sendSearchRequest(query);
+            });
+
+            client.onSearchResponse((response) => {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+
+                response.resultset.forEach(track => {
+                    const trackDiv = document.createElement('div');
+                    trackDiv.className = 'track-info';
+                    trackDiv.innerHTML = `
+                        <p><strong>Filename:</strong> ${track.filename}</p>
+                        <p><strong>Username:</strong> ${track.username}</p>
+                        <p><strong>Filesize:</strong> ${track.filesize}</p>
+                        <p><strong>Bitrate:</strong> ${track.bitrate}</p>
+                        <p><strong>Duration:</strong> ${track.duration}</p>
+                    `;
+                    resultsDiv.appendChild(trackDiv);
+                });
+            });
+
+            client.onError((error) => {
+                console.error('WebSocket Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
