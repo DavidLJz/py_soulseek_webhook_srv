@@ -164,6 +164,8 @@ class WebsocketServerMessageType(Enum):
   # Downloading {filename} from {username}...
   TRACK_DOWNLOAD_RESPONSE = 3
 
+  ERROR = 4
+
 
 class SearchResponse(BaseModel):
   query: str
@@ -179,6 +181,17 @@ class TrackDownloadStatus(Enum):
   FAILED = 3
 
 
+class WebsocketErrorCodes(Enum):
+  INTERNAL = 500
+  BAD_REQUEST = 400
+
+
+class WsError(BaseModel):
+  code: WebsocketErrorCodes
+  msg: str
+  fatal: bool = True
+
+
 class TrackDownloadInfo(BaseModel):
   ticket: int
   username: str
@@ -189,6 +202,32 @@ class TrackDownloadInfo(BaseModel):
 class WebsocketServerMessage(BaseModel):
   msg_type: WebsocketServerMessageType
   data: Any
+
+  # region Errors
+
+  @staticmethod
+  def from_internal_error(msg:str) -> 'WebsocketServerMessage':
+    return WebsocketServerMessage (
+      msg_type= WebsocketServerMessageType.ERROR,
+
+      data= WsError(
+        code= WebsocketErrorCodes.INTERNAL,
+        fatal= True,
+        msg= msg
+        )
+      )
+
+  @staticmethod
+  def from_bad_request(msg:str) -> 'WebsocketServerMessage':
+    return WebsocketServerMessage (
+      msg_type= WebsocketServerMessageType.ERROR,
+
+      data= WsError(
+        code= WebsocketErrorCodes.BAD_REQUEST,
+        fatal= True,
+        msg= msg
+        )
+      )
 
   @staticmethod
   def from_ws_server_message_enum() -> 'WebsocketServerMessage':
