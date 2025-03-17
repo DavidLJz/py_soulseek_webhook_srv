@@ -6,6 +6,9 @@ from nanoid import generate
 
 from aioslsk.search.model import FileData, SearchResult
 
+def _generateid() -> str:
+  return generate(size=8)
+
 # region TrackInfo
 
 def aiosk_FileData_Attributes_to_TrackInfo_Attributes(attributes: list) -> dict:
@@ -39,6 +42,7 @@ def aiosk_FileData_Attributes_to_TrackInfo_Attributes(attributes: list) -> dict:
 
 
 class TrackInfo(BaseModel):
+  Id: str
   ticket: int
   username: str
 
@@ -77,6 +81,7 @@ class TrackInfo(BaseModel):
 
       return TrackInfo(
       **attrdict,
+      Id= _generateid(),
       ticket= ticket,
       username= username,
       filename= filename,
@@ -166,10 +171,6 @@ class WebsocketServerMessageType(Enum):
   TRACK_DOWNLOAD_RESPONSE = 3
 
   ERROR = 4
-
-
-def _generate_search_response_id() -> str:
-  return generate(size=8)
 
 
 class SearchResponse(BaseModel):
@@ -270,7 +271,7 @@ class WebsocketServerMessage(BaseModel):
     return WebsocketServerMessage(
       msg_type= WebsocketServerMessageType.SEARCH_RESPONSE,
       data= SearchResponse(
-          Id= _generate_search_response_id(),
+          Id= _generateid(),
           query= query,
           ticket= ticket,
           resultset= resultset,
