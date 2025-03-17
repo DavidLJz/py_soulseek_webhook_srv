@@ -190,6 +190,7 @@ class WsError(BaseModel):
   code: WebsocketErrorCodes
   msg: str
   fatal: bool = True
+  '''A fatal error is one that should terminate the connection with the client.'''
 
 
 class TrackDownloadInfo(BaseModel):
