@@ -116,7 +116,7 @@ async def handle_track_download_request(websocket: WebSocket, ticket: int, usern
 @public_router.websocket("/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
 	try:
-		await manager.connect(websocket)
+		await manager.connect(client_id, websocket)
 
 		while True:
 			jsons = await websocket.receive_text()
