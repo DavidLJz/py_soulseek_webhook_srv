@@ -68,6 +68,7 @@ class WebSocketClient {
 class TrackInfo {
   /**
   * 
+  * @param {string} Id
   * @param {int} ticket 
   * @param {string} username 
   * @param {string} filename 
@@ -80,7 +81,8 @@ class TrackInfo {
   * @param {int} bit_depth 
   * @param {int} duration 
   */
-  constructor(ticket, username, filename, fullpath, extension, filesize, attributes, bitrate, sample_rate, bit_depth, duration) {
+  constructor(Id, ticket, username, filename, fullpath, extension, filesize, attributes, bitrate, sample_rate, bit_depth, duration) {
+    this.Id = Id;
     this.ticket = ticket;
     this.username = username;
     this.filename = filename;
@@ -96,6 +98,7 @@ class TrackInfo {
 
   static fromJson(d) {
     return new TrackInfo(
+      d.Id,
       d.ticket,
       d.username,
       d.filename,
@@ -115,13 +118,15 @@ class TrackInfo {
 class SearchResponse {
   /**
   * 
+  * @param {string} Id 
   * @param {string} query 
   * @param {int} ticket 
   * @param {int} total_results 
   * @param {int} current_results 
   * @param {Array<TrackInfo>} resultset
   */
-  constructor(query, ticket, total_results, current_results, resultset) {
+  constructor(Id, query, ticket, total_results, current_results, resultset) {
+    this.Id = Id;
     this.query = query;
     this.ticket = ticket;
     this.total_results = total_results;
@@ -131,6 +136,7 @@ class SearchResponse {
 
   static fromJson(d) {
     return new SearchResponse(
+      d.Id,
       d.query,
       d.ticket,
       d.total_results,

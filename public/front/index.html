@@ -52,12 +52,14 @@
                     const trackDiv = document.createElement('div');
                     trackDiv.className = 'track-info';
                     trackDiv.innerHTML = `
+                        <div><strong>ID:</strong> ${track.Id}</div>
                         <div><strong>Filename:</strong> ${track.fullpath}</div>
                         <div><strong>Username:</strong> ${track.username}</div>
                         <div><strong>Filesize:</strong> ${track.filesize}</div>
                         <div><strong>Bitrate:</strong> ${track.bitrate}</div>
                         <div><strong>Duration:</strong> ${track.duration}</div>
                     `;
+
                     resultsDiv.appendChild(trackDiv);
                 });
             });
