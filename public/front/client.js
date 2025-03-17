@@ -259,28 +259,34 @@ class SlskWebSocketClient {
 
     const data = JSON.parse(s);
 
-    if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.SEARCH_RESPONSE) {
-      const searchResponse = SearchResponse.fromJson(data.data);
-      
-      this._triggerEvent('searchResponse', searchResponse);
+    try {
+      if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.SEARCH_RESPONSE) {
+        const searchResponse = SearchResponse.fromJson(data.data);
+        
+        this._triggerEvent('searchResponse', searchResponse);
+      }
+
+      else if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.TRACK_INFO) {
+        const trackInfo = TrackInfo.fromJson(data.data);
+        
+        this._triggerEvent('trackInfo', trackInfo);
+      }
+
+      else if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.TRACK_DOWNLOAD_RESPONSE) {
+        const trackDownloadInfo = TrackDownloadInfo.fromJson(data.data);
+
+        this._triggerEvent('trackDownloadResponse', trackDownloadInfo);
+      }
+
+      else if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.ERROR) {
+        const wserror = WsError.fromJson(data.data);
+
+        this._triggerEvent('slskError', wserror);
+      }
     }
 
-    else if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.TRACK_INFO) {
-      const trackInfo = TrackInfo.fromJson(data.data);
-      
-      this._triggerEvent('trackInfo', trackInfo);
-    }
-
-    else if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.TRACK_DOWNLOAD_RESPONSE) {
-      const trackDownloadInfo = TrackDownloadInfo.fromJson(data.data);
-
-      this._triggerEvent('trackDownloadResponse', trackDownloadInfo);
-    }
-
-    else if (data.msg_type === SlskWebSocketClient.ServerMessageTypes.ERROR) {
-      const wserror = WsError.fromJson(data.data);
-
-      this._triggerEvent('slskError', wserror);
+    catch (e) {
+      console.error(e);
     }
   }
   

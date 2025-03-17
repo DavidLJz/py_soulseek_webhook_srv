@@ -39,13 +39,12 @@
 
             client.onSearchResponse((response) => {
                 const resultsDiv = document.getElementById('results');
-                resultsDiv.innerHTML = '';
 
                 response.resultset.forEach(track => {
                     const trackDiv = document.createElement('div');
                     trackDiv.className = 'track-info';
                     trackDiv.innerHTML = `
-                        <p><strong>Filename:</strong> ${track.filename}</p>
+                        <p><strong>Filename:</strong> ${track.fullpath}</p>
                         <p><strong>Username:</strong> ${track.username}</p>
                         <p><strong>Filesize:</strong> ${track.filesize}</p>
                         <p><strong>Bitrate:</strong> ${track.bitrate}</p>
