@@ -134,9 +134,8 @@ class SearchRequest(BaseModel):
 
 
 class TrackDownloadRequest(BaseModel):
-  ticket: int
-  username: str
-  filename: str
+  track_id: str
+  result_id: str
 
 
 class WebsocketClientMessage(BaseModel):
