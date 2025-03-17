@@ -1,13 +1,12 @@
 import asyncio
 import sys
-from pydantic import BaseModel
 
-from typing import AsyncGenerator, Callable
+from typing import Callable
 
 from aioslsk.client import SoulSeekClient
 from aioslsk.settings import Settings, CredentialsSettings
-from aioslsk.search.model import SearchResult, SearchRequest, SearchQuery
-from aioslsk.transfer.model import TransferRequest, Transfer
+from aioslsk.search.model import SearchRequest
+from aioslsk.transfer.model import Transfer
 from aioslsk.events import SearchResultEvent, EventBus, SessionDestroyedEvent
 
 class SoulseekAccesor:
